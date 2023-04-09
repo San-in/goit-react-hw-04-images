@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { getPicturesByQuery } from 'helpers/getPicturesByQuery';
 import { Dna } from 'react-loader-spinner';
 import * as Scroll from 'react-scroll';
@@ -9,89 +9,89 @@ import { StyledApp } from 'components/App/App.styled';
 import { Searchbar } from 'components/Searchbar/Searchbar';
 import { ImageGallery } from 'components/ImageGallery/ImageGallery';
 import { Button } from 'components/Button/Button';
+import { useEffect } from 'react';
 
-export class App extends Component {
-  state = {
-    searchedWord: '',
-    galleryItems: [],
-    page: 1,
-    perPage: 12,
-    totalHits: 0,
-    isLoading: false,
-  };
+export const App = () => {
+  const [searchedWord, setSearchedWord] = useState('');
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalHits, setTotalHits] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isTheFirstMount, setIsTheFirstMount] = useState(true);
 
-  onSubmitForm = searchedWord => {
+  const isShowButton = !isLoading && totalHits !== galleryItems.length;
+
+  useEffect(() => {
+    if (isTheFirstMount) {
+      return;
+    }
+    setIsLoading(true);
+
+    getPicturesByQuery(searchedWord, page)
+      .then(({ totalHits, galleryItems }) => {
+        setTotalHits(totalHits);
+        if (page > 1) {
+          Scroll.animateScroll.scrollMore(620);
+          setGalleryItems(prevGalleryItems => [
+            ...prevGalleryItems,
+            ...galleryItems,
+          ]);
+          return;
+        }
+        setGalleryItems(galleryItems);
+      })
+      .catch(({ message }) => {
+        console.error(message);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [searchedWord, page, isTheFirstMount]);
+
+  const onSubmitForm = searchedWord => {
     if (!searchedWord.trim()) {
       return toast.warn('Строка пуста, введіть щось');
     }
-    this.setState({ searchedWord, page: 1, galleryItems: [], totalHits: 0 });
+    setSearchedWord(searchedWord);
+    setIsTheFirstMount(false);
+    setPage(1);
+    setGalleryItems([]);
+    setTotalHits(0);
   };
-  onLoadMore = () => {
-    this.setState(({ page }) => ({
-      page: page + 1,
-    }));
+  const onLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { searchedWord, page } = this.state;
-
-    if (prevState.searchedWord !== searchedWord || prevState.page !== page) {
-      this.setState({ isLoading: true });
-
-      getPicturesByQuery(searchedWord, page)
-        .then(({ totalHits, galleryItems }) => {
-          this.setState(prevState => ({
-            totalHits,
-            galleryItems: [...prevState.galleryItems, ...galleryItems],
-          }));
-          if (page !== 1) {
-            Scroll.animateScroll.scrollMore(620);
-          }
-        })
-        .catch(({ message }) => {
-          console.error(message);
-        })
-        .finally(() => this.setState({ isLoading: false }));
-    }
-  }
-
-  render() {
-    const { searchedWord, galleryItems, isLoading, totalHits } = this.state;
-    const isShowButton = !isLoading && totalHits !== galleryItems.length;
-    return (
-      <StyledApp>
-        <Searchbar
-          onSubmit={this.onSubmitForm}
-          searchValueinApp={searchedWord}
+  return (
+    <StyledApp>
+      <Searchbar onSubmit={onSubmitForm} searchValueinApp={searchedWord} />
+      {isLoading && (
+        <Dna
+          height="280"
+          width="280"
+          wrapperStyle={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
         />
-        {isLoading && (
-          <Dna
-            height="280"
-            width="280"
-            wrapperStyle={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-            }}
-          />
-        )}
+      )}
 
-        {!!galleryItems.length && <ImageGallery galleryItems={galleryItems} />}
-        {isShowButton && <Button onLoadMore={this.onLoadMore} />}
-        <ToastContainer
-          position="top-right"
-          autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-      </StyledApp>
-    );
-  }
-}
+      {!!galleryItems.length && <ImageGallery galleryItems={galleryItems} />}
+      {isShowButton && <Button onLoadMore={onLoadMore} />}
+      <ToastContainer
+        position="top-right"
+        autoClose={1500}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </StyledApp>
+  );
+};

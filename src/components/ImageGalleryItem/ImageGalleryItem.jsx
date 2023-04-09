@@ -1,41 +1,33 @@
 import PropTypes from 'prop-types';
-import { Component } from 'react';
+import { useState } from 'react';
 import { Modal } from 'components/Modal/Modal';
 import {
   GalleryItem,
   GalleryImg,
 } from 'components/ImageGalleryItem/ImageGalleryItem.styled';
 
-export class ImageGalleryItem extends Component {
-  state = {
-    isModalOpen: false,
-  };
+export const ImageGalleryItem = ({
+  item: { webformatURL, largeImageURL, tags },
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  openModal = () => {
-    this.setState({ isModalOpen: true });
-  };
-  closeModal = () => {
-    this.setState({ isModalOpen: false });
-  };
-  render() {
-    const { webformatURL, largeImageURL, tags } = this.props.item;
-
-    return (
-      <>
-        <GalleryItem onClick={this.openModal}>
-          <GalleryImg src={webformatURL} alt={tags} loading="lazy" />
-        </GalleryItem>
-        {this.state.isModalOpen && (
-          <Modal
-            link={largeImageURL}
-            alt={tags || 'big image'}
-            onClose={this.closeModal}
-          />
-        )}
-      </>
-    );
-  }
-}
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+  return (
+    <>
+      <GalleryItem onClick={openModal}>
+        <GalleryImg src={webformatURL} alt={tags} loading="lazy" />
+      </GalleryItem>
+      {isModalOpen && (
+        <Modal
+          link={largeImageURL}
+          alt={tags || 'big image'}
+          onClose={closeModal}
+        />
+      )}
+    </>
+  );
+};
 
 ImageGalleryItem.propTypes = {
   item: PropTypes.exact({
