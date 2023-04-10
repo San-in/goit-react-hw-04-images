@@ -14,7 +14,7 @@ export const Searchbar = ({ searchValueinApp, onSubmit }) => {
   const [isDisable, setIsDisable] = useState(true);
 
   const onInput = ({ target: { value } }) => {
-    value ? setIsDisable(false) : setIsDisable(true);
+    setIsDisable(!value);
     setSearchedItem(value);
   };
 
@@ -26,7 +26,7 @@ export const Searchbar = ({ searchValueinApp, onSubmit }) => {
       toast.warn('Це ж вже було!');
     }
 
-    e.target.reset();
+    setSearchedItem('');
     setIsDisable(true);
   };
   return (
@@ -42,6 +42,7 @@ export const Searchbar = ({ searchValueinApp, onSubmit }) => {
           autoFocus
           placeholder="Search images and photos"
           onChange={onInput}
+          value={searchedItem}
         />
       </SearchForm>
     </Header>

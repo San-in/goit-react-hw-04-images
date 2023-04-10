@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { getPicturesByQuery } from 'helpers/getPicturesByQuery';
-import { Dna } from 'react-loader-spinner';
 import * as Scroll from 'react-scroll';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { StyledApp } from 'components/App/App.styled';
@@ -10,6 +9,8 @@ import { Searchbar } from 'components/Searchbar/Searchbar';
 import { ImageGallery } from 'components/ImageGallery/ImageGallery';
 import { Button } from 'components/Button/Button';
 import { useEffect } from 'react';
+import { Toster } from 'components/Toster/Toster';
+import { Loader } from 'components/Loader/Loader';
 
 export const App = () => {
   const [searchedWord, setSearchedWord] = useState('');
@@ -17,12 +18,9 @@ export const App = () => {
   const [page, setPage] = useState(1);
   const [totalHits, setTotalHits] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [isTheFirstMount, setIsTheFirstMount] = useState(true);
-
-  const isShowButton = !isLoading && totalHits !== galleryItems.length;
 
   useEffect(() => {
-    if (isTheFirstMount) {
+    if (!searchedWord) {
       return;
     }
     setIsLoading(true);
@@ -46,14 +44,13 @@ export const App = () => {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [searchedWord, page, isTheFirstMount]);
+  }, [searchedWord, page]);
 
   const onSubmitForm = searchedWord => {
     if (!searchedWord.trim()) {
       return toast.warn('Строка пуста, введіть щось');
     }
     setSearchedWord(searchedWord);
-    setIsTheFirstMount(false);
     setPage(1);
     setGalleryItems([]);
     setTotalHits(0);
@@ -61,37 +58,16 @@ export const App = () => {
   const onLoadMore = () => {
     setPage(prevPage => prevPage + 1);
   };
+  const isShowButton = !isLoading && totalHits !== galleryItems.length;
 
   return (
     <StyledApp>
       <Searchbar onSubmit={onSubmitForm} searchValueinApp={searchedWord} />
-      {isLoading && (
-        <Dna
-          height="280"
-          width="280"
-          wrapperStyle={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-      )}
+      {isLoading && <Loader />}
 
       {!!galleryItems.length && <ImageGallery galleryItems={galleryItems} />}
       {isShowButton && <Button onLoadMore={onLoadMore} />}
-      <ToastContainer
-        position="top-right"
-        autoClose={1500}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <Toster />
     </StyledApp>
   );
 };

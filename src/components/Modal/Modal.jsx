@@ -18,8 +18,14 @@ export const Modal = ({ onClose, link, alt }) => {
     };
   }, [onClose]);
 
+  const onClickBackdrop = ({ target, currentTarget }) => {
+    if (target === currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <ModalOverlay onClick={onClose}>
+    <ModalOverlay onClick={onClickBackdrop}>
       <ModalImage>
         <img src={link} alt={alt} />
       </ModalImage>
